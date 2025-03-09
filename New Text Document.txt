@@ -1,0 +1,126 @@
+import React, { useState } from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+
+export default function VideoApp() {
+  const [videos, setVideos] = useState([]);
+  const [page, setPage] = useState("home");
+  const [editIndex, setEditIndex] = useState(null);
+  const [editTitle, setEditTitle] = useState("");
+  const [editDescription, setEditDescription] = useState("");
+
+  const handleUpload = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      const videoUrl = URL.createObjectURL(file);
+      const title = window.prompt("Enter video title:") || "Untitled Video";
+      const description = window.prompt("Enter video description:") || "No description";
+      setVideos([...videos, { url: videoUrl, title, description }]);
+    }
+  };
+
+  const handleDelete = (index) => {
+    setVideos(videos.filter((_, i) => i !== index));
+  };
+  
+  const handleEdit = (index) => {
+    setEditIndex(index);
+    setEditTitle(videos[index].title);
+    setEditDescription(videos[index].description);
+  };
+
+  const saveEdit = () => {
+    setVideos((prevVideos) =>
+      prevVideos.map((video, i) =>
+        i === editIndex ? { ...video, title: editTitle, description: editDescription } : video
+      )
+    );
+    setEditIndex(null);
+  };
+  
+  return (
+    <div className="p-6 max-w-2xl mx-auto">
+      <nav className="flex justify-between mb-6">
+        <Button onClick={() => setPage("home")} variant="outline">Home</Button>
+        <Button onClick={() => setPage("videos")} variant="outline">Videos</Button>
+        <Button onClick={() => setPage("upload")} variant="outline">Upload</Button>
+        <Button onClick={() => setPage("channel")} variant="outline">My Channel</Button>
+        <Button onClick={() => setPage("studio")} variant="outline">Studio</Button>
+      </nav>
+      
+      {page === "home" || page === "videos" || page === "channel" ? (
+        <div>
+          <h1 className="text-xl font-bold mb-4">{page.charAt(0).toUpperCase() + page.slice(1)}</h1>
+          <div className="grid gap-4">
+            {videos.length > 0 ? (
+              videos.map((video, index) => (
+                <Card key={index}>
+                  <CardContent>
+                    <video controls className="w-full rounded-xl">
+                      <source src={video.url} type="video/mp4" />
+                    </video>
+                    <h3 className="text-lg font-bold mt-2">{video.title}</h3>
+                    <p className="text-gray-600">{video.description}</p>
+                  </CardContent>
+                </Card>
+              ))
+            ) : (
+              <p className="text-gray-600">No videos available.</p>
+            )}
+          </div>
+        </div>
+      ) : null}
+      
+      {page === "upload" && (
+        <div>
+          <h1 className="text-xl font-bold mb-4">Upload Video</h1>
+          <input type="file" accept="video/*" onChange={handleUpload} className="border p-2 w-full" />
+        </div>
+      )}
+      
+      {page === "studio" && (
+        <div>
+          <h1 className="text-xl font-bold mb-4">Studio</h1>
+          <div className="grid gap-4">
+            {videos.length > 0 ? (
+              videos.map((video, index) => (
+                <Card key={index}>
+                  <CardContent>
+                    <video controls className="w-full rounded-xl">
+                      <source src={video.url} type="video/mp4" />
+                    </video>
+                    {editIndex === index ? (
+                      <>
+                        <Input
+                          value={editTitle}
+                          onChange={(e) => setEditTitle(e.target.value)}
+                          className="mt-2"
+                        />
+                        <Input
+                          value={editDescription}
+                          onChange={(e) => setEditDescription(e.target.value)}
+                          className="mt-2"
+                        />
+                        <Button onClick={saveEdit} className="mt-2">Save</Button>
+                      </>
+                    ) : (
+                      <>
+                        <h3 className="text-lg font-bold mt-2">{video.title}</h3>
+                        <p className="text-gray-600">{video.description}</p>
+                        <Button onClick={() => handleEdit(index)} className="mt-2">Edit</Button>
+                        <Button variant="destructive" onClick={() => handleDelete(index)} className="mt-2">Delete</Button>
+                      </>
+                    )}
+                  </CardContent>
+                </Card>
+              ))
+            ) : (
+              <p className="text-gray-600">No videos available.</p>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
